@@ -15,7 +15,8 @@ with open('config.json') as config_f:
 with open("labels.json") as f:
     labels = json.load(f)
 
-img_path = 'aparc+aseg.nii.gz'
+#img_path = 'secondary/aparc+aseg.nii.gz'
+img_path = 'secondary/aparc.a2009s+aseg.nii.gz'
 
 # import the binary nifti image
 print("loading %s" % img_path)
