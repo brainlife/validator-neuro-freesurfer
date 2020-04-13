@@ -48,19 +48,23 @@ with open('config.json') as config_f:
     for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas" ]:
         results[parc] = {}
 
-        if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
-            os.remove("secondary/"+parc+"+aseg.mgz")
-        os.symlink("../"+freesurfer_dir+"/mri/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
+        #if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
+        #    os.remove("secondary/"+parc+"+aseg.mgz")
+        #os.symlink("../"+freesurfer_dir+"/mri/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
 
         lh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/lh.'+parc+'.stats')
         dfl = lh_stats.structural_measurements
-        #dfl.to_csv(parc+'-lh.cortex.csv')
-        results[parc]["lh.cortex"] = dfl.to_dict()
+        dfl.to_csv("secondary/"+parc+'_lh-cortex.csv')
+
+        #convert to plotly to show?
+        #results[parc]["lh.cortex"] = dfl.to_dict()
 
         rh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/rh.'+parc+'.stats')
         dfr = rh_stats.structural_measurements
-        #dfr.to_csv(parc+'-rh.cortex.csv')
-        results[parc]["rh.cortex"] = dfr.to_dict()
+        dfr.to_csv("secondary/"+parc+'_rh-cortex.csv')
+
+        #conver to plotly?
+        #results[parc]["rh.cortex"] = dfr.to_dict()
 
         white_matter_stats = open(freesurfer_dir+'/stats/wmparc.stats')
         [lh_wm_vol,rh_wm_vol,tot_wm_vol] = extract_wm_stats(white_matter_stats)
@@ -76,8 +80,10 @@ with open('config.json') as config_f:
         whole_brain.insert(8,"Left Hemisphere Mean Cortical Gray Matter Thickness",lh_stats.whole_brain_measurements['mean_thickness_mm'],True)
         whole_brain.insert(9,"Right Hemisphere Mean Cortical Gray Matter Thickness",rh_stats.whole_brain_measurements['mean_thickness_mm'],True)
 
-        #whole_brain.to_csv(parc+'-whole_brain.csv')
-        results[parc]["whole_brain"] = whole_brain.to_dict()
+        whole_brain.to_csv("secondary/"+parc+'_whole-brain.csv')
+
+        #convert to plotly?
+        #results[parc]["whole_brain"] = whole_brain.to_dict()
 
 with open("product.json", "w") as fp:
     json.dump(results, fp)

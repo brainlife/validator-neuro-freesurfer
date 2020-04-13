@@ -14,6 +14,6 @@ set -x
 
 time singularity exec -e docker://brainlife/validator-neuro-freesurfer:1.0 ./validate.py
 
-time singularity exec -e -B `pwd`/license.txt:/tmp/license.txt docker://brainlife/freesurfer-mini:6.0.1 ./convert.sh
+time singularity exec -e -B `pwd`/license.txt:/usr/local/freesurfer/license.txt docker://brainlife/freesurfer-mini:6.0.1 ./convert.sh
 
 time singularity exec -e docker://brainlife/pythonvtk:1.1 ./freesurfer2vtks.py
