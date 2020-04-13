@@ -28,7 +28,7 @@ def extract_wm_stats(input_data_lines):
 
 with open('config.json') as config_f:
     config = json.load(config_f)
-    freesurfer_dir = config["freesurfer"]
+    freesurfer_dir = config["output"]
     #parc = config["parcellation"]
     #parc = "aparc.DKTatlas"
     parc = "aparc.a2009s"
