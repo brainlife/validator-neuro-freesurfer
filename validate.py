@@ -39,7 +39,7 @@ with open('config.json') as config_f:
 
     if os.path.lexists("output/output"):
         os.remove("output/output")
-    os.symlink("../"+config['freesurfer'], "output/output")
+    os.symlink("../"+freesurfer_dir, "output/output")
 
     if not os.path.exists("secondary"):
         os.mkdir("secondary")
@@ -50,7 +50,7 @@ with open('config.json') as config_f:
 
         if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
             os.remove("secondary/"+parc+"+aseg.mgz")
-        os.symlink("../"+config['freesurfer']+"/mri/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
+        os.symlink("../"+freesurfer_dir+"/mri/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
 
         lh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/lh.'+parc+'.stats')
         dfl = lh_stats.structural_measurements
