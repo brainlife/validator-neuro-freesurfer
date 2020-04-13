@@ -5,11 +5,12 @@
 #PBS -N validator-freesurfer
 #PBS -V
 
-set -e
-set -x
 
 [ -z "$FREESURFER_LICENSE" ] && echo "Please set FREESURFER_LICENSE in .bashrc" && exit 1;
 echo $FREESURFER_LICENSE > license.txt
+
+set -e
+set -x
 
 time singularity exec -e docker://brainlife/validator-neuro-freesurfer:1.0 ./validate.py
 
