@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=1
+#PBS -l vmem=8gb
+#PBS -l walltime=0:10:00
+#PBS -N validator-freesurfer
+#PBS -V
+
+set -e
+set -x
+
+[ -z "$FREESURFER_LICENSE" ] && echo "Please set FREESURFER_LICENSE in .bashrc" && exit 1;
+echo $FREESURFER_LICENSE > license.txt
+
+time singularity exec -e docker://brainlife/validator-neuro-freesurfer:1.0 ./validate.py
+
+time singularity exec -e -B `pwd`/license.txt:/tmp/license.txt docker://brainlife/freesurfer-mini:6.0.1 ./convert.sh
+
+time singularity exec -e docker://brainlife/pythonvtk:1.1 ./freesurfer2vtks.py

@@ -1,0 +1,7 @@
+config.json
+testdata
+*.nii.gz
+license.txt
+output
+secondary
+product.json
