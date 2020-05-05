@@ -74,8 +74,8 @@ with open('config.json') as config_f:
         "layout": { 
             "xaxis_title": "Volume (mm^3)",
             "margin": {
-                l: 150,
-                b: 30,
+                "l": 150,
+                "b": 30,
             }
         }
     }
@@ -133,8 +133,8 @@ with open('config.json') as config_f:
                     #"barmode": "stack" 
                     "xaxis_title": "volume (mm^3)",
                     "margin": {
-                        l: 150,
-                        b: 30,
+                        "l": 150,
+                        "b": 30,
                     }
                 },
             }
@@ -163,8 +163,8 @@ with open('config.json') as config_f:
                     #"barmode": "stack" 
                     "xaxis_title": "mm",
                     "margin": {
-                        l: 150,
-                        b: 30,
+                        "l": 150,
+                        "b": 30,
                     }
                 },
             }
