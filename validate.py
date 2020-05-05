@@ -72,7 +72,11 @@ with open('config.json') as config_f:
             "orientation": 'h',
         }],
         "layout": { 
-            "xaxis_title": "Volume (mm^3)"
+            "xaxis_title": "Volume (mm^3)",
+            "margin": {
+                l: 150,
+                b: 30,
+            }
         }
     }
     results["brainlife"].append(graph)
@@ -127,7 +131,11 @@ with open('config.json') as config_f:
                 }],
                 "layout": { 
                     #"barmode": "stack" 
-                    "xaxis_title": "volume (mm^3)"
+                    "xaxis_title": "volume (mm^3)",
+                    "margin": {
+                        l: 150,
+                        b: 30,
+                    }
                 },
             }
             results["brainlife"].append(graph)
@@ -153,7 +161,11 @@ with open('config.json') as config_f:
                 }],
                 "layout": { 
                     #"barmode": "stack" 
-                    "xaxis_title": "mm"
+                    "xaxis_title": "mm",
+                    "margin": {
+                        l: 150,
+                        b: 30,
+                    }
                 },
             }
             results["brainlife"].append(graph)
