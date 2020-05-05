@@ -69,6 +69,7 @@ with open('config.json') as config_f:
             "type": "bar",
             "x": x,
             "y": y,
+            "orientation": 'h',
         }],
         "layout": { 
             "xaxis_title": "Volume (mm^3)"
@@ -122,6 +123,7 @@ with open('config.json') as config_f:
                     "type": "bar",
                     "x": x,
                     "y": y,
+                    "orientation": 'h',
                 }],
                 "layout": { 
                     #"barmode": "stack" 
@@ -147,6 +149,7 @@ with open('config.json') as config_f:
                     "type": "bar",
                     "x": x,
                     "y": y,
+                    "orientation": 'h',
                 }],
                 "layout": { 
                     #"barmode": "stack" 
