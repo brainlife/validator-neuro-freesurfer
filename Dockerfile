@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y python3-dev python3-numpy python3-pip j
 
 RUN pip3 install pandas
 
-RUN git clone https://github.com/fphammerle/freesurfer-stats.git /freesurfer-stats
+#RUN git clone https://github.com/fphammerle/freesurfer-stats.git /freesurfer-stats
+RUN git clone https://github.com/soichih/freesurfer-stats.git /freesurfer-stats
 RUN cd /freesurfer-stats && python3 setup.py build_ext --inplace
 
 ENV PYTHONPATH /freesurfer-stats:$PYTHONPATH

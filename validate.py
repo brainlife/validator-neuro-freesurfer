@@ -9,30 +9,29 @@ import os
 import pandas as pd
 from freesurfer_stats import CorticalParcellationStats
 
-results = {"errors": [], "warnings": []}
+results = {"errors": [], "warnings": [], "brainlife": []}
 
-def extract_wm_stats(input_data_lines):
-    lines_var = input_data_lines.readlines()
-    lh = lines_var[14]
-    lh = lh.replace(',','')
-    rh = lines_var[15]
-    rh = rh.replace(',','')
-    tot = lines_var[16]
-    tot = tot.replace(',','')
-    lh_wm_vol = float(lh.split()[10])
-    rh_wm_vol = float(rh.split()[10])
-    tot_wm_vol = float(tot.split()[9])
+def extract_measures(path):
+    measures = {}
+    with open(path, 'r') as input_file:
+        #parse Measures
+        lines = input_file.readlines()
+        for line in lines:
+            if line.startswith("# Measure"):
+                tokens = line.split(",")
+                #['# Measure VentricleChoroidVol', ' VentricleChoroidVol', ' Volume of ventricles and choroid plexus', ' 9296.000000', ' mm^3\n']
+                #assume last 2 are the value and unit
+                name = tokens[1].strip()
+                desc = tokens[2].strip()
+                value = float(tokens[3].strip())
+                unit = tokens[4].strip()
+                measures[name] = {"value": value, "unit": unit, "desc": desc}
 
-    return [lh_wm_vol,rh_wm_vol,tot_wm_vol]
-
+    return measures
 
 with open('config.json') as config_f:
     config = json.load(config_f)
     freesurfer_dir = config["output"]
-    #parc = config["parcellation"]
-    #parc = "aparc.DKTatlas"
-    parc = "aparc.a2009s"
-    parc = "aparc"
 
     if not os.path.exists("output"):
         os.mkdir("output")
@@ -44,46 +43,117 @@ with open('config.json') as config_f:
     if not os.path.exists("secondary"):
         os.mkdir("secondary")
 
-    #copy important parcellations
+    #copy important parcellations to secondary
     for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas" ]:
-        results[parc] = {}
+        if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
+            os.remove("secondary/"+parc+"+aseg.mgz")
+        os.symlink("../"+freesurfer_dir+"/output/output/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
+    
+    wm_measures = extract_measures(freesurfer_dir+'/stats/wmparc.stats')
+    with open("secondary/wmparc.json", "w") as fp:
+        json.dump(wm_measures, fp)
 
-        #if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
-        #    os.remove("secondary/"+parc+"+aseg.mgz")
-        #os.symlink("../"+freesurfer_dir+"/mri/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
+    #create plotly for wmparc
+    x = []
+    y = []
+    for key in wm_measures:
+        wm_measure = wm_measures[key]
+        x.append(wm_measure["value"])
+        y.append(key)
 
+    graph = {
+        "type": "plotly",
+        "name": "White Matter Parcellation Stats",
+        "data": [{
+            #"name": parc,
+            "type": "bar",
+            "x": x,
+            "y": y,
+        }],
+        "layout": { 
+            "xaxis_title": "Volume (mm^3)"
+        }
+    }
+    results["brainlife"].append(graph)
+
+    for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas" ]:
+
+        #convert stats to csv
         lh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/lh.'+parc+'.stats')
         dfl = lh_stats.structural_measurements
         dfl.to_csv("secondary/"+parc+'_lh-cortex.csv')
-
-        #convert to plotly to show?
-        #results[parc]["lh.cortex"] = dfl.to_dict()
 
         rh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/rh.'+parc+'.stats')
         dfr = rh_stats.structural_measurements
         dfr.to_csv("secondary/"+parc+'_rh-cortex.csv')
 
-        #conver to plotly?
-        #results[parc]["rh.cortex"] = dfr.to_dict()
+        #these value are very close between different parcellation, so let's just output for aparc
+        if parc == "aparc":
+            ######################### volume ###################################################
+            x = []
+            y = []
+            x.append(lh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
+            y.append("TotalBrainVol")
+            #LR are same
+            #x.append(rh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
+            #y.append("RH TotalBrainVol")
 
-        white_matter_stats = open(freesurfer_dir+'/stats/wmparc.stats')
-        [lh_wm_vol,rh_wm_vol,tot_wm_vol] = extract_wm_stats(white_matter_stats)
+            x.append(lh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
+            y.append("TotalIntracranialVol")
+            #LR are same
+            #x.append(rh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
+            #y.append("RH TotalIntracranialVol")
 
-        whole_brain = lh_stats.whole_brain_measurements[['brain_segmentation_volume_mm^3','estimated_total_intracranial_volume_mm^3']]
-        whole_brain = whole_brain.rename(columns={"brain_segmentation_volume_mm^3": "Total Brain Volume", "estimated_total_intracranial_volume_mm^3": "Total Intracranial Volume"})
-        whole_brain.insert(2,"Total Cortical Gray Matter Volume",lh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'],True)
-        whole_brain.insert(3,"Total White Matter Volume",tot_wm_vol,True)
-        whole_brain.insert(4,"Left Hemisphere Cortical Gray Matter Volume",numpy.sum(lh_stats.structural_measurements['gray_matter_volume_mm^3']),True)
-        whole_brain.insert(5,"Right Hemisphere Cortical Gray Matter Volume",numpy.sum(rh_stats.structural_measurements['gray_matter_volume_mm^3']),True)
-        whole_brain.insert(6,"Left Hemisphere White Matter Volume",lh_wm_vol,True)
-        whole_brain.insert(7,"Right Hemisphere White Matter Volume",rh_wm_vol,True)
-        whole_brain.insert(8,"Left Hemisphere Mean Cortical Gray Matter Thickness",lh_stats.whole_brain_measurements['mean_thickness_mm'],True)
-        whole_brain.insert(9,"Right Hemisphere Mean Cortical Gray Matter Thickness",rh_stats.whole_brain_measurements['mean_thickness_mm'],True)
+            x.append(lh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
+            y.append("TotalCorticalGrayMatterVol")
+            #LR are same
+            #x.append(rh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
+            #y.append("RH TotalCorticalGrayMatterVol")
 
-        whole_brain.to_csv("secondary/"+parc+'_whole-brain.csv')
+            x.append(int(numpy.sum(lh_stats.structural_measurements['gray_matter_volume_mm^3'])))
+            y.append("LH CorticalGrayMatterVol")
+            x.append(int(numpy.sum(rh_stats.structural_measurements['gray_matter_volume_mm^3'])))
+            y.append("RH CorticalGrayMatterVol")
 
-        #convert to plotly?
-        #results[parc]["whole_brain"] = whole_brain.to_dict()
+            graph = {
+                "type": "plotly",
+                "name": parc+ " Volumes",
+                "data": [{
+                    "type": "bar",
+                    "x": x,
+                    "y": y,
+                }],
+                "layout": { 
+                    #"barmode": "stack" 
+                    "xaxis_title": "volume (mm^3)"
+                },
+            }
+            results["brainlife"].append(graph)
+
+            ####################### thickness ####################################################
+        
+
+            x = []
+            y = []
+            x.append(lh_stats.whole_brain_measurements['mean_thickness_mm'][0])
+            y.append("LH MeanCorticalGrayMatterThickness")
+            x.append(rh_stats.whole_brain_measurements['mean_thickness_mm'][0])
+            y.append("RH MeanCorticalGrayMatterThickness")
+
+            graph = {
+                "type": "plotly",
+                "name": parc+ " Thickness",
+                "data": [{
+                    "type": "bar",
+                    "x": x,
+                    "y": y,
+                }],
+                "layout": { 
+                    #"barmode": "stack" 
+                    "xaxis_title": "mm"
+                },
+            }
+            results["brainlife"].append(graph)
 
 with open("product.json", "w") as fp:
     json.dump(results, fp)
