@@ -17,4 +17,5 @@ time singularity exec -e docker://brainlife/validator-neuro-freesurfer:1.0 ./val
 
 time singularity exec -e -B `pwd`/license.txt:/usr/local/freesurfer/license.txt docker://brainlife/freesurfer-mini:6.0.1 ./convert.sh
 
-time singularity exec -e docker://brainlife/pythonvtk:1.1 ./freesurfer2vtks.py
+#this creates surfaces with 50MB... I think it's too big?
+#time singularity exec -e docker://brainlife/pythonvtk:1.1 ./freesurfer2vtks.py

@@ -84,7 +84,7 @@ for label in labels:
 
     deci = vtk.vtkDecimatePro()
     deci.SetInputConnection(cleaned.GetOutputPort())
-    deci.SetTargetReduction(0.5)
+    deci.SetTargetReduction(1.0) #get rid of it all.. 
     deci.PreserveTopologyOn()
 
     writer = vtk.vtkPolyDataWriter()
