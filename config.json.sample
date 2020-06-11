@@ -1,3 +1,4 @@
 {
-    "output": "testdata/freesurfer7/output"
+    "output": "testdata/freesurfer7/output",
+    "output-hcp": "testdata/hcppipeline/output"
 }

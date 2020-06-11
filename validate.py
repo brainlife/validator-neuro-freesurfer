@@ -44,10 +44,11 @@ with open('config.json') as config_f:
         os.mkdir("secondary")
 
     #copy important parcellations to secondary
-    for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas" ]:
-        if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
-            os.remove("secondary/"+parc+"+aseg.mgz")
-        os.symlink("../"+freesurfer_dir+"/output/output/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
+    for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas"]:
+        if os.path.exists("../"+freesurfer_dir+"/output/output/"+parc+"+aseg.mgz"):
+            if os.path.lexists("secondary/"+parc+"+aseg.mgz"):
+                os.remove("secondary/"+parc+"+aseg.mgz")
+            os.symlink("../"+freesurfer_dir+"/output/output/"+parc+"+aseg.mgz", "secondary/"+parc+"+aseg.mgz")
     
     wm_measures = extract_measures(freesurfer_dir+'/stats/wmparc.stats')
     with open("secondary/wmparc.json", "w") as fp:
@@ -85,102 +86,111 @@ with open('config.json') as config_f:
     }
     results["brainlife"].append(graph)
 
-    for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas" ]:
+    for parc in [ "aparc", "aparc.a2009s", "aparc.DKTatlas", "aparc.DKTatlas40" ]:
 
-        #convert stats to csv
-        lh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/lh.'+parc+'.stats')
-        dfl = lh_stats.structural_measurements
-        dfl.to_csv("secondary/"+parc+'_lh-cortex.csv')
+        if os.path.exists(freesurfer_dir+'/stats/lh.'+parc+'.stats'):
 
-        rh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/rh.'+parc+'.stats')
-        dfr = rh_stats.structural_measurements
-        dfr.to_csv("secondary/"+parc+'_rh-cortex.csv')
+            #convert stats to csv
+            lh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/lh.'+parc+'.stats')
+            dfl = lh_stats.structural_measurements
+            dfl.to_csv("secondary/"+parc+'_lh-cortex.csv')
 
-        #these value are very close between different parcellation, so let's just output for aparc
-        if parc == "aparc":
-            ######################### volume ###################################################
-            x = []
-            y = []
-            x.append(lh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
-            y.append("TotalBrainVol")
-            #LR are same
-            #x.append(rh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
-            #y.append("RH TotalBrainVol")
+            rh_stats = CorticalParcellationStats.read(freesurfer_dir+'/stats/rh.'+parc+'.stats')
+            dfr = rh_stats.structural_measurements
+            dfr.to_csv("secondary/"+parc+'_rh-cortex.csv')
 
-            x.append(lh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
-            y.append("TotalIntracranialVol")
-            #LR are same
-            #x.append(rh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
-            #y.append("RH TotalIntracranialVol")
+            #these value are very close between different parcellation, so let's just output for aparc
+            if parc == "aparc":
+                ######################### volume ###################################################
+                x = []
+                y = []
 
-            x.append(lh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
-            y.append("TotalCorticalGrayMatterVol")
-            #LR are same
-            #x.append(rh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
-            #y.append("RH TotalCorticalGrayMatterVol")
+                #mris_anatomical_stats >=1.79
+                if 'brain_segmentation_volume_mm^3' in lh_stats.whole_brain_measurements:
+                    x.append(lh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
+                    y.append("TotalBrainVol")
 
-            x.append(int(numpy.sum(lh_stats.structural_measurements['gray_matter_volume_mm^3'])))
-            y.append("LH CorticalGrayMatterVol")
-            x.append(int(numpy.sum(rh_stats.structural_measurements['gray_matter_volume_mm^3'])))
-            y.append("RH CorticalGrayMatterVol")
+                    #LR are same
+                    #x.append(rh_stats.whole_brain_measurements['brain_segmentation_volume_mm^3'][0])
+                    #y.append("RH TotalBrainVol")
 
-            graph = {
-                "type": "plotly",
-                "name": parc+ " Volumes",
-                "data": [{
-                    "type": "bar",
-                    "x": x,
-                    "y": y,
-                    "orientation": 'h',
-                }],
-                "layout": { 
-                    #"barmode": "stack" 
-                    "xaxis": {
-                        "title": "mm^3",
+                #mris_anatomical_stats >=1.79
+                if 'estimated_total_intracranial_volume_mm^3' in lh_stats.whole_brain_measurements:
+                    x.append(lh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
+                    y.append("TotalIntracranialVol")
+                    #LR are same
+                    #x.append(rh_stats.whole_brain_measurements['estimated_total_intracranial_volume_mm^3'][0])
+                    #y.append("RH TotalIntracranialVol")
+
+                if 'total_cortical_gray_matter_volume_mm^3' in lh_stats.whole_brain_measurements:
+                    x.append(lh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
+                    y.append("TotalCorticalGrayMatterVol")
+                    #LR are same
+                    #x.append(rh_stats.whole_brain_measurements['total_cortical_gray_matter_volume_mm^3'][0])
+                    #y.append("RH TotalCorticalGrayMatterVol")
+
+                x.append(int(numpy.sum(lh_stats.structural_measurements['gray_matter_volume_mm^3'])))
+                y.append("LH CorticalGrayMatterVol")
+                x.append(int(numpy.sum(rh_stats.structural_measurements['gray_matter_volume_mm^3'])))
+                y.append("RH CorticalGrayMatterVol")
+
+                graph = {
+                    "type": "plotly",
+                    "name": parc+ " Volumes",
+                    "data": [{
+                        "type": "bar",
+                        "x": x,
+                        "y": y,
+                        "orientation": 'h',
+                    }],
+                    "layout": { 
+                        #"barmode": "stack" 
+                        "xaxis": {
+                            "title": "mm^3",
+                        },
+                        "margin": {
+                            "t": 0,
+                            "r": 0,
+                            "l": 175,
+                            "b": 30,
+                        }
                     },
-                    "margin": {
-                        "t": 0,
-                        "r": 0,
-                        "l": 175,
-                        "b": 30,
-                    }
-                },
-            }
-            results["brainlife"].append(graph)
+                }
+                results["brainlife"].append(graph)
 
-            ####################### thickness ####################################################
-        
+                ####################### thickness ####################################################
+            
 
-            x = []
-            y = []
-            x.append(lh_stats.whole_brain_measurements['mean_thickness_mm'][0])
-            y.append("LH MeanCorticalGrayMatterThickness")
-            x.append(rh_stats.whole_brain_measurements['mean_thickness_mm'][0])
-            y.append("RH MeanCorticalGrayMatterThickness")
+                x = []
+                y = []
+                x.append(lh_stats.whole_brain_measurements['mean_thickness_mm'][0])
+                y.append("LH MeanCorticalGrayMatterThickness")
+                x.append(rh_stats.whole_brain_measurements['mean_thickness_mm'][0])
+                y.append("RH MeanCorticalGrayMatterThickness")
 
-            graph = {
-                "type": "plotly",
-                "name": parc+ " Thickness",
-                "data": [{
-                    "type": "bar",
-                    "x": x,
-                    "y": y,
-                    "orientation": 'h',
-                }],
-                "layout": { 
-                    #"barmode": "stack" 
-                    "xaxis": {
-                        "title": "mm",
+                graph = {
+                    "type": "plotly",
+                    "name": parc+ " Thickness",
+                    "data": [{
+                        "type": "bar",
+                        "x": x,
+                        "y": y,
+                        "orientation": 'h',
+                    }],
+                    "layout": { 
+                        #"barmode": "stack" 
+                        "xaxis": {
+                            "title": "mm",
+                        },
+                        "margin": {
+                            "t": 0,
+                            "r": 0,
+                            "l": 175,
+                            "b": 30,
+                        }
                     },
-                    "margin": {
-                        "t": 0,
-                        "r": 0,
-                        "l": 175,
-                        "b": 30,
-                    }
-                },
-            }
-            results["brainlife"].append(graph)
+                }
+                results["brainlife"].append(graph)
 
 with open("product.json", "w") as fp:
     json.dump(results, fp)
